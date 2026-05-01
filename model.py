@@ -66,7 +66,7 @@ class UNet(nn.Module):
     U-Net for binary brain tumor segmentation.
 
     Input:  (B, 3, H, W)   — RGB MRI slice
-    Output: (B, 1, H, W)   — sigmoid probability map for tumor pixels
+    Output: (B, 1, H, W)   — raw logits (apply sigmoid explicitly for inference)
 
     Encoder channel progression: 3 → 64 → 128 → 256 → 512
     Bottleneck:                        512 → 1024

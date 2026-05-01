@@ -15,7 +15,7 @@ def dice_score(pred, target, threshold=0.5, smooth=1.0):
     Dice score for a batch of binary predictions.
 
     Args:
-        pred:      (B, 1, H, W) sigmoid outputs
+        pred:      (B, 1, H, W) sigmoid probabilities (NOT raw logits)
         target:    (B, 1, H, W) binary ground-truth masks
         threshold: binarization cutoff
         smooth:    Laplace smoothing to avoid division by zero
