@@ -46,6 +46,9 @@ def get_transforms(image_size=256, augment=True):
             A.ElasticTransform(p=0.2),
             A.GridDistortion(p=0.2),
             A.RandomBrightnessContrast(p=0.3),
+            A.GaussNoise(p=0.2),
+            # CLAHE improves local contrast in MRI images
+            A.CLAHE(clip_limit=2.0, p=0.3),
             A.Normalize(mean=(0.485, 0.456, 0.406),
                         std=(0.229, 0.224, 0.225)),
             ToTensorV2(),

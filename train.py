@@ -33,19 +33,51 @@ class DiceLoss(nn.Module):
         return 1.0 - dice
 
 
-class BCEDiceLoss(nn.Module):
-    """Combined BCE + Dice loss. BCE handles per-pixel imbalance; Dice handles region overlap."""
+class FocalTverskyLoss(nn.Module):
+    """
+    Focal Tversky loss — penalises false negatives more than false positives,
+    which matters for tumor segmentation where missing tumor pixels is costly.
 
-    def __init__(self, bce_weight=0.5, smooth=1.0):
+    alpha: weight on false positives (keep low)
+    beta:  weight on false negatives (keep high)
+    gamma: focal exponent — values < 1 push harder on difficult examples
+    """
+
+    def __init__(self, alpha=0.3, beta=0.7, gamma=0.75, smooth=1.0):
+        super().__init__()
+        self.alpha = alpha
+        self.beta  = beta
+        self.gamma = gamma
+        self.smooth = smooth
+
+    def forward(self, pred, target):
+        pred = torch.sigmoid(pred)
+        pred_flat   = pred.view(-1)
+        target_flat = target.view(-1)
+
+        tp = (pred_flat * target_flat).sum()
+        fp = ((1 - target_flat) * pred_flat).sum()
+        fn = (target_flat * (1 - pred_flat)).sum()
+
+        tversky = (tp + self.smooth) / (
+            tp + self.alpha * fp + self.beta * fn + self.smooth
+        )
+        return (1 - tversky) ** self.gamma
+
+
+class BCEDiceLoss(nn.Module):
+    """Combined BCE + Focal Tversky loss."""
+
+    def __init__(self, bce_weight=0.4, smooth=1.0):
         super().__init__()
         self.bce_weight = bce_weight
         # BCEWithLogitsLoss is AMP-safe (fuses sigmoid + BCE internally)
-        self.bce  = nn.BCEWithLogitsLoss()
-        self.dice = DiceLoss(smooth=smooth)
+        self.bce   = nn.BCEWithLogitsLoss()
+        self.tversky = FocalTverskyLoss(smooth=smooth)
 
     def forward(self, pred, target):
         return self.bce_weight * self.bce(pred, target) + \
-               (1 - self.bce_weight) * self.dice(pred, target)
+               (1 - self.bce_weight) * self.tversky(pred, target)
 
 
 # ---------------------------------------------------------------------------

@@ -84,8 +84,11 @@ class UNet(nn.Module):
             self.encoders.append(EncoderBlock(ch, feat))
             ch = feat
 
-        # Bottleneck
-        self.bottleneck = DoubleConv(features[-1], features[-1] * 2)
+        # Bottleneck with dropout for regularization
+        self.bottleneck = nn.Sequential(
+            DoubleConv(features[-1], features[-1] * 2),
+            nn.Dropout2d(p=0.3),
+        )
 
         # Decoder (reversed features)
         self.decoders = nn.ModuleList()
