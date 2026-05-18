@@ -1,5 +1,4 @@
 # NeuroTrace
-A project for CS 571
 
 This project aims to use a U-Net model in PyTorch to predict pixel-level masks that outline tumor regions in brain MRI images.
 
